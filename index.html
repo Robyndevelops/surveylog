@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Logbook">
+<meta name="theme-color" content="#f0f4ff">
+<title>Surveyor's Logbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#1a3a6b;--blue-dark:#152d54;--blue-soft:#e8eef8;--blue-dim:#1a3a6b1a;
+    --bg:#f5f7ff;--bg2:#ffffff;--bg3:#f0f4ff;--border:#c5d0e8;
+    --text:#1a2340;--muted:#5a6a8a;--green:#16a34a;--green-bg:#f0fdf4;
+    --green-border:#bbf7d0;--red:#dc2626;
+    --shadow:0 2px 12px rgba(37,99,235,0.09);--shadow-sm:0 1px 3px rgba(37,99,235,0.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(15,30,80,0.45);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:999;}
+  .modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:40px 36px;width:90%;max-width:440px;box-shadow:0 12px 48px rgba(37,99,235,0.18);}
+  .modal-box h2{font-family:'Playfair Display',serif;color:var(--blue);font-size:24px;margin-bottom:6px;}
+  .modal-box p{color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6;}
+  header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm);}
+  .header-inner{max-width:880px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:12px;text-align:center;}
+  .header-title{font-family:'Playfair Display',serif;font-size:20.4px;color:var(--text);}
+  .header-sub{font-size:12px;letter-spacing:2.5px;color:var(--blue);text-transform:uppercase;font-weight:500;}
+  .header-name{font-size:14.4px;color:var(--muted);margin-top:2px;}
+  #studentTabs{display:none!important;}
+  #studentBottomNav{display:none!important;}
+  @media(max-width:620px){
+    .header-inner{justify-content:center;text-align:center;}
+    .header-title{font-size:20.4px;}
+  }
+  .tab-bar{display:flex;gap:8px;flex-shrink:0;}
+  .role-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.5px;}
+  .role-principal{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+  .btn-blue{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;transition:background .15s;white-space:nowrap;}
+  .btn-blue:hover{background:var(--blue-dark);}.btn-blue:disabled{opacity:.4;cursor:default;}
+  .btn-green{background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+  .btn-green:hover{opacity:.88;}
+  .btn-ghost{background:transparent;color:var(--blue);border:1.5px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s;white-space:nowrap;}
+  .btn-ghost:hover{border-color:var(--blue);background:var(--blue-dim);}.btn-ghost.active{background:var(--blue-dim);border-color:var(--blue);}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid #fecaca;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;}
+  .btn-danger:hover{background:#fff1f1;}
+  .btn-sm{background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;}
+  .btn-sm:hover{background:var(--border);}
+  .view{display:none;}.view.active{display:block;}
+  .container{max-width:880px;margin:0 auto;padding:24px 16px;}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:24px;}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow-sm);}
+  .stat-val{font-size:26px;font-weight:700;color:var(--blue);font-family:'Playfair Display',serif;}
+  .stat-lbl{font-size:11px;color:var(--muted);margin-top:4px;font-weight:500;}
+  .search-sort-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .search-sort-bar input{flex:2;min-width:180px;}
+  .search-sort-bar select{flex:1;min-width:140px;}
+  .progress-bar-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow-sm);}
+  .progress-bar-track{background:var(--border);border-radius:20px;height:12px;overflow:hidden;margin:8px 0 4px;}
+  .progress-bar-fill{height:100%;border-radius:20px;background:var(--blue);transition:width .4s;}
+  .progress-bar-fill.warn{background:#f59e0b;}
+  .progress-bar-fill.done{background:var(--green);}
+  .entry-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s,border-color .2s;}
+  .entry-card:hover{box-shadow:var(--shadow);border-color:#c7d7fb;}
+  .entry-head{padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--border);}
+  .entry-type{font-size:10px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;font-weight:600;}
+  .entry-date{font-size:12px;color:var(--muted);margin-left:10px;}
+  .entry-prop{font-size:14px;font-weight:600;margin-top:5px;}
+  .entry-meta{font-size:12px;color:var(--muted);margin-top:3px;}
+  .entry-degree{color:var(--blue);font-weight:500;}
+  .entry-notes{padding:10px 16px;font-size:12px;color:var(--muted);font-style:italic;background:var(--bg3);}
+  .entry-actions{display:flex;gap:6px;flex-shrink:0;margin-left:12px;}
+  .comment-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;}
+  .comment-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+  .comment-pending{background:#fef9c3;color:#854d0e;border:1px solid #fde68a;}
+  .empty-state{text-align:center;padding:64px 24px;color:var(--muted);border:2px dashed var(--border);border-radius:16px;background:var(--bg2);}
+  .empty-icon{font-size:44px;margin-bottom:14px;}
+  .section-title{font-size:10px;letter-spacing:3px;color:var(--blue);text-transform:uppercase;font-weight:600;margin-bottom:14px;border-bottom:2px solid var(--blue-soft);padding-bottom:8px;}
+  .section{margin-bottom:30px;}
+  .field{margin-bottom:14px;}
+  .field label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px;font-weight:500;}
+  input[type=text],input[type=date],input[type=number],select,textarea{width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none;}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim);}
+  textarea{resize:vertical;min-height:90px;line-height:1.6;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .nature-item{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;margin-bottom:6px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;line-height:1.5;transition:background .15s,border-color .15s;user-select:none;}
+  .nature-item:hover{background:var(--blue-soft);border-color:#c7d7fb;}
+  .nature-item.checked{background:var(--blue-soft);border-color:var(--blue);color:var(--blue-dark);font-weight:500;}
+  .nature-item input[type=checkbox]{margin-top:2px;accent-color:var(--blue);flex-shrink:0;}
+  .hour-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+  .hour-row select{flex:2;}.hour-row input{flex:1;}
+  .total-hours{margin-top:12px;font-size:14px;color:var(--blue);font-weight:600;background:var(--blue-soft);padding:10px 14px;border-radius:8px;display:inline-block;}
+  .principal-entry{background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-sm);}
+  .principal-entry-head{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg3);}
+  .principal-entry-body{padding:16px 20px;}
+  .detail-label{color:var(--muted);font-weight:500;min-width:140px;flex-shrink:0;}
+  .nature-list{margin-top:4px;}
+  .nature-list li{font-size:12px;color:var(--text);margin-bottom:3px;list-style:none;padding-left:12px;position:relative;}
+  .nature-list li::before{content:'–';position:absolute;left:0;color:var(--blue);}
+  .comment-area{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+  .comment-area label{font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:8px;}
+  .saved-comment{background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;padding:12px 14px;font-size:13px;color:#166534;margin-top:8px;}
+  .progress-card{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid var(--blue);border-radius:14px;margin-bottom:20px;overflow:hidden;box-shadow:var(--shadow);}
+  .progress-card-head{padding:16px 20px;background:var(--blue);color:#fff;display:flex;justify-content:space-between;align-items:center;}
+  .progress-card-head h3{font-family:'Playfair Display',serif;font-size:16px;}
+  .progress-card-body{padding:20px;}
+  .progress-done{border-color:var(--green);}.progress-done .progress-card-head{background:var(--green);}
+  .sub-nav-btn{background:transparent;border:none;padding:10px 14px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+  .sub-nav-btn:hover{color:var(--blue);}
+  .sub-nav-btn.active{color:var(--blue);border-bottom:2px solid var(--blue);font-weight:600;}
+  .hamburger-item{display:block;width:100%;text-align:left;background:transparent;border:none;padding:12px 16px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;color:var(--text);cursor:pointer;transition:background .15s;}
+  .hamburger-item:hover{background:var(--bg3);}
+  .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:8px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-state{text-align:center;padding:48px;color:var(--muted);}
+  .report-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;font-family:'Courier New',monospace;font-size:12px;line-height:1.9;color:var(--text);white-space:pre-wrap;max-height:55vh;overflow-y:auto;box-shadow:var(--shadow-sm);}
+  .report-hint{font-size:12px;color:var(--muted);margin-top:10px;}
+  .attachment-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .attachment-item{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;flex-shrink:0;}
+  .attachment-item img{width:100%;height:100%;object-fit:cover;}
+  .attachment-item .att-icon{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg3);font-size:22px;}
+  .attachment-item .att-name{font-size:9px;color:var(--muted);text-align:center;padding:0 4px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;}
+  .upload-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg3);border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:border-color .15s;}
+  .upload-btn:hover{border-color:var(--blue);color:var(--blue);}
+  .upload-progress{font-size:12px;color:var(--blue);margin-top:6px;}
+  #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;box-shadow:0 4px 16px rgba(37,99,235,0.3);}
+  #toast.show{opacity:1;}#toast.green{background:var(--green);}
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:10px 16px 22px;gap:8px;z-index:40;box-shadow:0 -2px 12px rgba(37,99,235,0.07);}
+  @media(max-width:620px){
+    .bottom-nav{display:flex;}.tab-bar{display:none;}.container{padding-bottom:96px;}
+
+    .two-col{grid-template-columns:1fr;}.header-title{font-size:15px;}.detail-label{min-width:110px;}
+  }
+  @media print{
+    header,.bottom-nav,#roleModal,#nameModal,button{display:none!important;}
+    body{background:white;color:black;}
+    #viewReport{display:block!important;}
+    #viewList,#viewForm,#viewPrincipal{display:none!important;}
+    .report-box{background:white;color:black;border:none;max-height:none;overflow:visible;box-shadow:none;padding:0;}
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-box" style="max-width:380px">
+    <h2 style="margin-bottom:4px">SurveyLog</h2>
+    <p style="margin-bottom:16px">A digital logbook for student surveyors and supervisors.</p>
+
+    <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--border)">
+      <button id="authTabLogin" onclick="switchAuthTab('login')" style="flex:1;padding:10px;border:none;background:none;font-weight:600;border-bottom:2px solid var(--blue);cursor:pointer">Log In</button>
+      <button id="authTabSignup" onclick="switchAuthTab('signup')" style="flex:1;padding:10px;border:none;background:none;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">Sign Up</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="authLoginPane">
+      <div class="field"><label>Email</label><input type="email" id="loginEmail" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPassword" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-blue" style="width:100%;margin-top:6px;padding:12px;font-size:15px" onclick="doLogin()">Log In</button>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="authSignupPane" style="display:none">
+      <div class="field"><label>Full Name</label><input type="text" id="signupName" autocomplete="name"></div>
+      <div class="field"><label>Email</label><input type="email" id="signupEmail" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input type="password" id="signupPassword" autocomplete="new-password"></div>
+      <div class="field">
+        <label>I am a...</label>
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button type="button" id="signupRoleStudent" class="btn-ghost" style="flex:1;padding:10px" onclick="setSignupRole('student')">Student</button>
+          <button type="button" id="signupRoleSupervisor" class="btn-ghost" style="flex:1;padding:10px" onclick="setSignupRole('supervisor')">Supervisor</button>
+        </div>
+      </div>
+      <div class="field" id="inviteCodeField" style="display:none">
+        <label>Invite Code (from your supervisor)</label>
+        <input type="text" id="signupInviteCode" placeholder="e.g. ABC123">
+      </div>
+      <button class="btn-blue" style="width:100%;margin-top:6px;padding:12px;font-size:15px" onclick="doSignup()">Create Account</button>
+    </div>
+
+    <div id="authError" style="color:#dc2626;font-size:13px;min-height:20px;margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- SUPERVISOR ONBOARDING WIZARD (first login only) -->
+<div class="modal-overlay" id="wizardModal" style="display:none">
+  <div class="modal-box" style="max-width:440px">
+    <h2 style="margin-bottom:4px">Set Up Your Logbook</h2>
+    <p style="margin-bottom:16px">A few quick details — you can change all of this later in Settings.</p>
+    <div class="field"><label>Organization / Firm Name</label><input type="text" id="wizOrgName" placeholder="e.g. Acme Surveying Ltd."></div>
+    <div class="field"><label>Brand Color</label><input type="color" id="wizBrandColor" value="#1a3a6b" style="width:100%;height:40px;padding:4px"></div>
+    <div class="field"><label>Target Hours</label><input type="number" id="wizHourTarget" value="3000"></div>
+    <div class="field"><label>Location Field Label</label><input type="text" id="wizLocationLabel" value="Location" placeholder="e.g. Parish, District, County"></div>
+    <p style="font-size:12px;color:var(--muted);margin:10px 0">Job types start empty — add your own under Settings once you're in.</p>
+    <button class="btn-blue" style="width:100%;margin-top:6px;padding:12px;font-size:15px" onclick="finishWizard()">Finish Setup →</button>
+    <div id="wizardError" style="color:#dc2626;font-size:13px;min-height:20px;margin-top:8px"></div>
+  </div>
+</div>
+
+<!-- STUDENT: WAITING FOR PAIR -->
+<div class="modal-overlay" id="pendingModal" style="display:none">
+  <div class="modal-box" style="max-width:380px;text-align:center">
+    <h2 style="margin-bottom:8px">Almost there</h2>
+    <p>Your account is set up. Once your supervisor confirms the link, you'll be able to start logging entries.</p>
+    <button class="btn-ghost" style="margin-top:16px" onclick="logOut()">Log Out</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="header-sub">Attachment · Practical Training</div>
+      <div class="header-title">Student Surveyor's Diary &amp; Log Book</div>
+      <div class="header-name" id="headerName"></div>
+    </div>
+    <div class="tab-bar" id="studentTabs" style="display:none">
+      <button class="btn-ghost active" id="tabEntries" onclick="showView('list')">Entries</button>
+      <button class="btn-ghost" id="tabNew" onclick="newEntry()">+ New Entry</button>
+      <button class="btn-blue" id="btnReport" onclick="generateReport()" disabled>Report</button>
+      <button class="btn-ghost" id="tabSwitch" onclick="switchRole()" style="font-size:12px">Switch User</button>
+    </div>
+    <div class="tab-bar" id="principalTabs" style="display:none">
+      <span class="role-badge role-principal">Principal View</span>
+      <button class="btn-ghost" onclick="switchRole()" style="font-size:12px">Switch User</button>
+    </div>
+  </div>
+</header>
+
+<!-- SUB NAV (student only) -->
+<div id="subNav" style="display:none;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;box-shadow:var(--shadow-sm);position:sticky;top:57px;z-index:49;">
+  <div style="max-width:880px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;gap:4px;">
+      <button class="sub-nav-btn active" id="snTabEntries" onclick="showView('list')">📋 Entries</button>
+      <button class="sub-nav-btn" id="snTabNew" onclick="newEntry()">+ New Entry</button>
+    </div>
+    <div style="position:relative;">
+      <button class="sub-nav-btn" onclick="toggleHamburger()" id="hamburgerBtn">☰ More</button>
+      <div id="hamburgerMenu" style="display:none;position:absolute;right:0;top:100%;background:var(--bg2);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);min-width:210px;overflow:hidden;z-index:100;">
+        <button class="hamburger-item" onclick="generateReport();toggleHamburger()">📄 Generate Report</button>
+        <button class="hamburger-item" onclick="showView('list');setTimeout(()=>{window.scrollTo(0,document.getElementById('studentProgressSection').offsetTop);},100);toggleHamburger()">📋 Progress Reports</button>
+        <button class="hamburger-item" onclick="openSettings();toggleHamburger()">⚙️ Settings</button>
+        <div style="border-top:1px solid var(--border);margin:4px 0;"></div>
+        <button class="hamburger-item" onclick="switchRole();toggleHamburger()" style="color:var(--muted);">🔄 Switch User</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIST VIEW -->
+<div id="viewList" class="view active">
+  <div class="container">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="progress-bar-wrap" id="hoursProgressWrap" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:600;color:var(--text)">Hours Progress</span>
+        <span style="font-size:12px;color:var(--muted)" id="hoursProgressLabel"></span>
+      </div>
+      <div class="progress-bar-track"><div class="progress-bar-fill" id="hoursProgressFill" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:2px">
+        <span>0 hrs</span><span id="hoursProgressTarget"></span>
+      </div>
+    </div>
+    <div class="search-sort-bar">
+      <input type="text" id="searchInput" placeholder="🔍 Search entries..." oninput="renderList()" style="background:var(--bg2)">
+      <select id="sortSelect" onchange="renderList()" style="background:var(--bg2)">
+        <option value="date-asc">Date (oldest first)</option>
+        <option value="date-desc">Date (newest first)</option>
+        <option value="type">Job Type</option>
+        <option value="parish">Parish</option>
+      </select>
+    </div>
+    <div id="entryList"></div>
+    <div id="studentProgressSection" style="margin-top:28px;display:none">
+      <div class="section-title" style="color:var(--green);border-color:var(--green-border)">Progress Reports</div>
+      <div id="studentProgressList"></div>
+    </div>
+    <div id="deletedSection" style="display:none;margin-top:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:0;color:#dc2626;border-color:#fecaca">Recently Deleted</div>
+        <button class="btn-ghost" style="font-size:12px" onclick="toggleDeleted()">Hide</button>
+      </div>
+      <div id="deletedList"></div>
+    </div>
+    <div id="showDeletedBtn" style="display:none;margin-top:16px;text-align:center">
+      <button class="btn-ghost" style="font-size:12px;color:#dc2626;border-color:#fecaca" onclick="toggleDeleted()">🗑 Show Recently Deleted</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORM VIEW -->
+<div id="viewForm" class="view">
+  <div class="container">
+    <h2 style="font-family:'Playfair Display',serif;color:var(--blue);margin-bottom:22px;font-size:22px" id="formTitle">New Logbook Entry</h2>
+    <div class="section">
+      <div class="section-title">Job Details</div>
+      <div class="field"><label>Job Type</label>
+        <select id="fJobType" onchange="onJobTypeChange()">
+          <option>Cadastral Survey (Boundary Reopening)</option>
+          <option>Cadastral Survey (Boundary Survey)</option>
+          <option>Cadastral Survey (Surveyor's Identification Report)</option>
+          <option>Engineering Survey</option>
+          <option>Topographical Survey</option>
+          <option>Subdivision</option>
+          <option>Strata (Plan Preparation)</option>
+          <option>Plan Preparation</option>
+        </select>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Date</label><input type="date" id="fDate"></div>
+        <div class="field"><label>Parish</label>
+          <select id="fParish">
+            <option>St. Andrew</option><option>St. Catherine</option><option>St. James</option>
+            <option>Kingston</option><option>Clarendon</option><option>Portland</option>
+            <option>St. Ann</option><option>St. Mary</option><option>Westmoreland</option>
+            <option>Manchester</option><option>St. Elizabeth</option><option>Hanover</option>
+            <option>Trelawny</option><option>St. Thomas</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Title Reference</label>
+        <div id="titleRefRows"></div>
+        <button type="button" class="btn-ghost" style="margin-top:6px;font-size:12px" onclick="addTitleRow()">+ Add another title</button>
+      </div>
+      <div class="field">
+        <label>Deposited Plan No.</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="text" id="fDepositedPlan" placeholder="1234" style="flex:1">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);white-space:nowrap;margin-bottom:0">
+            <input type="checkbox" id="fDepositedPlanInclude" style="accent-color:var(--blue);width:16px;height:16px"> Include in report
+          </label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Strata Plan No.</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="text" id="fStrataPlan" placeholder="567" style="flex:1">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);white-space:nowrap;margin-bottom:0">
+            <input type="checkbox" id="fStrataPlanInclude" style="accent-color:var(--blue);width:16px;height:16px"> Include in report
+          </label>
+        </div>
+      </div>
+      <div class="field"><label>Property Description</label><input type="text" id="fPropDesc" placeholder="e.g. Part of Barbican Heights"></div>
+      <div class="field"><label>Parcel Size</label><input type="text" id="fParcelSize" placeholder="e.g. 2150 Sq. Metres"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Nature of Professional Work</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Select all that apply:</p>
+      <div id="natureOptions"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Student Surveyor's Notes</div>
+      <textarea id="fNotes" placeholder="Enter your personal observations and notes…"></textarea>
+    </div>
+    <div class="section">
+      <div class="section-title">Attachments</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Upload photos, scans or documents related to this entry.</p>
+      <div id="attachmentGrid" class="attachment-grid"></div>
+      <label class="upload-btn" style="margin-top:8px;display:inline-flex">
+        📎 &nbsp; Add File
+        <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="handleFileUpload(event)">
+      </label>
+      <div id="uploadProgress" class="upload-progress"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Work Hours</div>
+      <div id="hourRows"></div>
+      <button class="btn-ghost" style="margin-top:6px" onclick="addHourRow()">+ Add Hour Type</button>
+      <div class="total-hours">Total Hours: <span id="totalHoursDisplay">0</span></div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:32px;padding-top:12px;border-top:1px solid var(--border)">
+      <button class="btn-ghost" onclick="showView('list')">Cancel</button>
+      <button class="btn-blue" onclick="saveEntry()" style="padding:10px 28px" id="saveBtn">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT VIEW -->
+<div id="viewReport" class="view">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <h2 style="font-family:'Playfair Display',serif;color:var(--blue);font-size:22px">Generate Report</h2>
+      <button class="btn-ghost" onclick="showView('list')">← Back</button>
+    </div>
+
+    <!-- Period filter -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow-sm)">
+      <div class="section-title" style="margin-bottom:12px">Select Period</div>
+      <div class="field">
+        <label>Which period do you want to export?</label>
+        <select id="periodFilter" onchange="updateReportPreview()">
+          <option value="">All Periods (Full Logbook)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn-ghost" onclick="downloadReport()">Download .txt</button>
+        <button class="btn-blue" id="btnDownloadPDF" onclick="downloadPDF()">⬇ Download PDF</button>
+      </div>
+      <div id="pdfGenerating" style="display:none;margin-top:12px;color:var(--muted);font-size:13px">
+        <span class="spinner"></span> Generating your PDF — this takes a few seconds…
+      </div>
+    </div>
+
+    <div class="report-box" id="reportContent"></div>
+    <p class="report-hint">💡 "Download PDF" generates the full styled report. "Download .txt" is plain text.</p>
+  </div>
+</div>
+
+<!-- PRINCIPAL VIEW -->
+<div id="viewPrincipal" class="view">
+  <div class="container">
+    <div style="margin-bottom:24px">
+      <h2 style="font-family:'Playfair Display',serif;color:var(--green);font-size:22px;margin-bottom:4px">Principal's Review</h2>
+      <p style="color:var(--muted);font-size:13px">Complete 6-month progress reports and add comments on entries.</p>
+    </div>
+    <div style="margin-bottom:32px">
+      <div class="section-title" style="color:var(--green);border-color:#bbf7d0">6-Month Progress Reports</div>
+      <div id="progressReportsList"></div>
+    </div>
+    <div class="section-title">Entry Comments</div>
+    <div id="principalList"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="studentBottomNav" style="display:none">
+  <button class="btn-ghost active" id="mTabEntries" style="flex:1" onclick="showView('list')">📋 Entries</button>
+  <button class="btn-ghost" id="mTabNew" style="flex:1" onclick="newEntry()">+ New</button>
+  <button class="btn-blue" id="mBtnReport" style="flex:1" onclick="generateReport()" disabled>Report</button>
+  <button class="btn-ghost" style="flex:1;font-size:11px" onclick="switchRole()">Switch</button>
+</div>
+
+<div id="toast">Saved!</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" style="display:none">
+  <div class="modal-box" style="max-width:640px;max-height:88vh;overflow-y:auto;padding:0">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:10">
+      <h2 style="margin-bottom:0;font-size:20px">⚙️ Settings</h2>
+      <button class="btn-ghost" onclick="closeSettings()" style="font-size:18px;padding:4px 10px">✕</button>
+    </div>
+    <div style="display:flex;border-bottom:1px solid var(--border);padding:0 24px;background:var(--bg2);position:sticky;top:61px;z-index:9;">
+      <button class="sub-nav-btn active" id="stab1" onclick="switchSettingsTab(1)">Job Types</button>
+      <button class="sub-nav-btn" id="stab2" onclick="switchSettingsTab(2)">Nature of Work</button>
+      <button class="sub-nav-btn" id="stab3" onclick="switchSettingsTab(3)">Hour Types</button>
+    </div>
+    <div style="padding:24px">
+      <div id="settingsTab1">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Add, rename or remove job types. Drag ⠿ to reorder.</p>
+        <div id="settingsJobTypesList"></div>
+        <button class="btn-ghost" style="margin-top:8px;font-size:12px" onclick="addJobTypeSetting()">+ Add Job Type</button>
+      </div>
+      <div id="settingsTab2" style="display:none">
+        <div class="field">
+          <label>Select Job Type</label>
+          <select id="settingsJobType" onchange="renderNatureSettings()" style="margin-bottom:12px"></select>
+        </div>
+        <div id="settingsNatureList"></div>
+        <button class="btn-ghost" style="margin-top:8px;font-size:12px" onclick="addNatureItemSetting()">+ Add Item</button>
+      </div>
+      <div id="settingsTab3" style="display:none">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Add, rename or reorder work hour categories.</p>
+        <div id="settingsHourTypes"></div>
+        <button class="btn-ghost" style="margin-top:8px;font-size:12px" onclick="addHourTypeSetting()">+ Add Hour Type</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid var(--border);background:var(--bg2);position:sticky;bottom:0;">
+      <button class="btn-ghost" onclick="closeSettings()">Cancel</button>
+      <button class="btn-blue" onclick="saveSettings()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://dqilfhjjmrkbijojvckf.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxaWxmaGpqbXJrYmlqb2p2Y2tmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MjE3NjYsImV4cCI6MjEwMzQ5Nzc2Nn0.iGa4H9PJAI-q-xHTTfzibespzE_BuJF2BdSlFu2fHZI';
+const API_URL='https://surveylog-production.up.railway.app';
+
+// ---- Session (real Supabase Auth) ----
+function getSession(){
+  const raw=localStorage.getItem('sl_session');
+  if(!raw)return null;
+  try{return JSON.parse(raw);}catch(e){return null;}
+}
+function setSession(s){localStorage.setItem('sl_session',JSON.stringify(s));}
+function clearSession(){localStorage.removeItem('sl_session');}
+
+async function sbFetch(path,options={}){
+  const session=getSession();
+  const token=session?session.access_token:SUPABASE_KEY; // falls back to anon key pre-login (RLS blocks reads anyway)
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{
+    headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${token}`,'Content-Type':'application/json','Prefer':'return=representation',...options.headers},
+    ...options
+  });
+  if(!res.ok)throw new Error(await res.text());
+  const text=await res.text();return text?JSON.parse(text):[];
+}
+
+async function authRequest(path,body){
+  const res=await fetch(`${SUPABASE_URL}/auth/v1${path}`,{
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  });
+  const data=await res.json();
+  if(!res.ok)throw new Error(data.error_description||data.msg||data.error||'Something went wrong');
+  return data;
+}
+async function getEntries(){return await sbFetch('logbook_entries?order=date.asc&limit=200&deleted_at=is.null');}
+async function getDeletedEntries(){return await sbFetch('logbook_entries?order=deleted_at.desc&limit=50&deleted_at=not.is.null');}
+async function insertEntry(e){return await sbFetch('logbook_entries',{method:'POST',body:JSON.stringify(e)});}
+async function updateEntry(id,data){return await sbFetch(`logbook_entries?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(data)});}
+async function deleteEntryDB(id){await sbFetch(`logbook_entries?id=eq.${id}`,{method:'DELETE'});}
+async function getProgressReports(){return await sbFetch('progress_reports?order=period_label.asc');}
+async function saveProgressReportDB(data){
+  if(data.id)return await sbFetch(`progress_reports?id=eq.${data.id}`,{method:'PATCH',body:JSON.stringify(data)});
+  return await sbFetch('progress_reports',{method:'POST',body:JSON.stringify(data)});
+}
+
+// Blank by default — each pair builds their own job types and
+// "nature of professional work" checklists from scratch in Settings.
+const DEFAULT_NATURE_OPTIONS={};
+
+// Load from localStorage or use defaults
+function getHourTypes(){
+  const saved=localStorage.getItem('lb_hour_types');
+  if(saved)try{return JSON.parse(saved);}catch(e){}
+  return ["Field Work","Data Preparation","Research & Plotting","Plan Preparation","Data Analysis","Calculations & Data Analysis"];
+}
+function getNatureOptions(){
+  const saved=localStorage.getItem('lb_nature_options');
+  if(saved)try{return JSON.parse(saved);}catch(e){}
+  return DEFAULT_NATURE_OPTIONS;
+}
+let HOUR_TYPES=getHourTypes();
+let NATURE_OPTIONS=getNatureOptions();
+
+let entries=[],progressReports=[],studentName='',currentRole=null,editingId=null,selectedNature=[],hourRows=[{type:HOUR_TYPES[0],hours:''}];
+let currentProfile=null,currentPair=null,pairSettings=null;
+
+function hideAllAuthModals(){
+  ['authModal','wizardModal','pendingModal','roleModal','nameModal'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+}
+
+window.onload=async function(){
+  const session=getSession();
+  if(!session){hideAllAuthModals();document.getElementById('authModal').style.display='flex';return;}
+  try{
+    await loadProfileAndPair();
+  }catch(e){
+    clearSession();hideAllAuthModals();document.getElementById('authModal').style.display='flex';
+  }
+};
+
+function switchAuthTab(tab){
+  document.getElementById('authLoginPane').style.display=tab==='login'?'block':'none';
+  document.getElementById('authSignupPane').style.display=tab==='signup'?'block':'none';
+  document.getElementById('authTabLogin').style.borderBottomColor=tab==='login'?'var(--blue)':'transparent';
+  document.getElementById('authTabLogin').style.color=tab==='login'?'':'var(--muted)';
+  document.getElementById('authTabSignup').style.borderBottomColor=tab==='signup'?'var(--blue)':'transparent';
+  document.getElementById('authTabSignup').style.color=tab==='signup'?'':'var(--muted)';
+  document.getElementById('authError').textContent='';
+}
+
+let signupRole=null;
+function setSignupRole(role){
+  signupRole=role;
+  document.getElementById('signupRoleStudent').style.background=role==='student'?'var(--blue)':'';
+  document.getElementById('signupRoleStudent').style.color=role==='student'?'white':'';
+  document.getElementById('signupRoleSupervisor').style.background=role==='supervisor'?'var(--blue)':'';
+  document.getElementById('signupRoleSupervisor').style.color=role==='supervisor'?'white':'';
+  document.getElementById('inviteCodeField').style.display=role==='student'?'block':'none';
+}
+
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  document.getElementById('authError').textContent='';
+  if(!email||!password){document.getElementById('authError').textContent='Enter your email and password.';return;}
+  try{
+    const data=await authRequest('/token?grant_type=password',{email,password});
+    setSession(data);
+    await loadProfileAndPair();
+  }catch(e){document.getElementById('authError').textContent=e.message;}
+}
+
+async function doSignup(){
+  const email=document.getElementById('signupEmail').value.trim();
+  const password=document.getElementById('signupPassword').value;
+  const fullName=document.getElementById('signupName').value.trim();
+  const inviteCode=document.getElementById('signupInviteCode').value.trim();
+  document.getElementById('authError').textContent='';
+  if(!email||!password||!fullName){document.getElementById('authError').textContent='Fill in all fields.';return;}
+  if(!signupRole){document.getElementById('authError').textContent='Choose whether you are a student or supervisor.';return;}
+  if(signupRole==='student'&&!inviteCode){document.getElementById('authError').textContent='Enter the invite code from your supervisor.';return;}
+  try{
+    const data=await authRequest('/signup',{email,password});
+    setSession(data);
+    // Create profile row
+    await sbFetch('profiles',{method:'POST',body:JSON.stringify({
+      id:data.user.id,role:signupRole,full_name:fullName
+    })});
+    if(signupRole==='supervisor'){
+      // Show onboarding wizard to set up their first pair + settings
+      currentProfile={id:data.user.id,role:'supervisor',full_name:fullName};
+      hideAllAuthModals();document.getElementById('wizardModal').style.display='flex';
+    } else {
+      // Redeem invite code: find pending pair with this code and link student_id
+      const matches=await sbFetch(`pairs?invite_code=eq.${encodeURIComponent(inviteCode)}&status=eq.pending`);
+      if(!matches.length){
+        document.getElementById('authError').textContent='Invalid or already-used invite code.';
+        return;
+      }
+      await sbFetch(`pairs?id=eq.${matches[0].id}`,{method:'PATCH',body:JSON.stringify({student_id:data.user.id,status:'active'})});
+      studentName=fullName;
+      await loadProfileAndPair();
+    }
+  }catch(e){document.getElementById('authError').textContent=e.message;}
+}
+
+async function finishWizard(){
+  const orgName=document.getElementById('wizOrgName').value.trim();
+  const brandColor=document.getElementById('wizBrandColor').value;
+  const hourTarget=parseInt(document.getElementById('wizHourTarget').value)||3000;
+  const locationLabel=document.getElementById('wizLocationLabel').value.trim()||'Location';
+  try{
+    // Create a pending pair (student joins later via invite code) + its settings
+    const inviteCode=Math.random().toString(36).slice(2,8).toUpperCase();
+    const pairRows=await sbFetch('pairs',{method:'POST',body:JSON.stringify({
+      supervisor_id:currentProfile.id,invite_code:inviteCode,status:'pending'
+    })});
+    const pair=pairRows[0];
+    await sbFetch('pair_settings',{method:'POST',body:JSON.stringify({
+      pair_id:pair.id,organization_name:orgName,brand_color:brandColor,
+      hour_target:hourTarget,location_field_label:locationLabel,job_types:[],report_sections:[]
+    })});
+    hideAllAuthModals();
+    await loadProfileAndPair();
+    alert(`Setup complete. Share this invite code with your student so they can join: ${inviteCode}`);
+  }catch(e){document.getElementById('wizardError').textContent=e.message;}
+}
+
+async function loadProfileAndPair(){
+  const session=getSession();
+  const profiles=await sbFetch(`profiles?id=eq.${session.user.id}`);
+  if(!profiles.length)throw new Error('No profile found');
+  currentProfile=profiles[0];
+  studentName=currentProfile.full_name;
+  currentRole=currentProfile.role==='supervisor'?'principal':'student';
+
+  if(currentProfile.role==='supervisor'){
+    const pairs=await sbFetch(`pairs?supervisor_id=eq.${currentProfile.id}&order=created_at.desc`);
+    currentPair=pairs.find(p=>p.status==='active')||pairs[0]||null;
+  } else {
+    const pairs=await sbFetch(`pairs?student_id=eq.${currentProfile.id}&status=eq.active`);
+    currentPair=pairs[0]||null;
+  }
+
+  if(!currentPair){
+    hideAllAuthModals();
+    if(currentProfile.role==='supervisor'){document.getElementById('wizardModal').style.display='flex';}
+    else{document.getElementById('pendingModal').style.display='flex';}
+    return;
+  }
+
+  const settingsRows=await sbFetch(`pair_settings?pair_id=eq.${currentPair.id}`);
+  pairSettings=settingsRows[0]||null;
+  if(pairSettings){
+    if(pairSettings.job_types&&pairSettings.job_types.length)NATURE_OPTIONS=pairSettings.job_types;
+    if(pairSettings.hour_target)localStorage.setItem('lb_hour_target',pairSettings.hour_target);
+  }
+
+  hideAllAuthModals();
+  if(currentRole==='principal'){
+    document.getElementById('principalTabs').style.display='flex';
+    document.getElementById('headerName').textContent=studentName+' · Supervisor';
+    showView('principal');loadPrincipalView();
+  } else {
+    initStudentView();
+  }
+}
+
+function logOut(){
+  clearSession();
+  currentProfile=null;currentPair=null;pairSettings=null;studentName='';currentRole=null;
+  location.reload();
+}
+
+function switchRole(){
+  // Kept for compatibility with existing nav buttons; now just logs out
+  // since role is tied to the authenticated account, not a shared toggle.
+  logOut();
+}
+
+async function initStudentView(){
+
+  document.getElementById('subNav').style.display='block';
+
+  document.getElementById('headerName').textContent=studentName+' · Student Surveyor';
+  showView('list');
+  document.getElementById('entryList').innerHTML=`<div class="loading-state"><span class="spinner"></span> Loading entries…</div>`;
+  try{
+    [entries, progressReports]=await Promise.all([getEntries(), getProgressReports()]);
+    renderList();
+    renderStudentProgressReports();
+  }
+  catch(e){document.getElementById('entryList').innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><p>Could not connect.<br><small>${e.message}</small></p></div>`;}
+}
+
+function renderStudentProgressReports(){
+  const periods=getProgressPeriods();
+  const section=document.getElementById('studentProgressSection');
+  const list=document.getElementById('studentProgressList');
+  if(!section||!list||!periods.length){if(section)section.style.display='none';return;}
+  section.style.display='block';
+  list.innerHTML=periods.map(p=>{
+    const existing=progressReports.find(r=>r.period_label===p.label)||{};
+    const hasSupervisorComment=existing.principal_observations&&existing.principal_observations.trim();
+    const hasCand=existing.candidate_comments&&existing.candidate_comments.trim();
+    const key=p.label.replace(/\s/g,'_');
+    return `<div class="progress-card" style="border-color:${hasSupervisorComment?'var(--green)':'var(--border)'}">
+      <div class="progress-card-head" style="background:${hasSupervisorComment?'var(--green)':'var(--muted)'}">
+        <h3 style="font-size:14px">${p.label}</h3>
+        <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:20px">${hasSupervisorComment?'✓ Supervisor commented':'⏳ Awaiting supervisor'}</span>
+      </div>
+      <div class="progress-card-body">
+        ${hasSupervisorComment?`
+        <div style="margin-bottom:14px">
+          <div style="font-size:10px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase">Supervisor's Observations</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7;background:var(--green-bg);padding:12px;border-radius:8px;border:1px solid var(--green-border)">${existing.principal_observations}</div>
+          ${existing.principal_signature_date?`<div style="font-size:11px;color:var(--muted);margin-top:4px">Signed: ${existing.principal_signature_date}</div>`:''}
+        </div>`:'<div style="color:var(--muted);font-size:13px;margin-bottom:14px;font-style:italic">Your supervisor has not yet added their observations for this period.</div>'}
+        <hr style="border:none;border-top:1px solid var(--border);margin:0 0 14px">
+        <div style="font-size:10px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase">Your Comments</div>
+        <textarea id="scand_${key}" style="width:100%;min-height:90px;resize:vertical" placeholder="Add your candidate comments for this period…">${existing.candidate_comments||''}</textarea>
+        <div class="two-col" style="margin-top:10px">
+          <div class="field"><label>Your Signature Date</label>
+            <input type="date" id="scsig_${key}" value="${existing.candidate_signature_date||''}">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button class="btn-blue" onclick="saveStudentProgressComment('${p.label}','${existing.id||''}')">Save My Comments</button>
+        </div>
+        ${hasCand?`<div class="saved-comment" style="margin-top:10px">Last saved: "${existing.candidate_comments.substring(0,80)}${existing.candidate_comments.length>80?'…':''}"</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveStudentProgressComment(label, existingId){
+  const key=label.replace(/\s/g,'_');
+  const cand=document.getElementById(`scand_${key}`).value.trim();
+  const csig=document.getElementById(`scsig_${key}`).value;
+  if(!cand){showToast('Please enter your comments first');return;}
+  const data={pair_id:currentPair.id,period_label:label,candidate_comments:cand,candidate_signature_date:csig};
+  if(existingId)data.id=existingId;
+  else{
+    // Need to create new record if none exists
+    data.principal_observations='';
+  }
+  try{
+    await saveProgressReportDB(data);
+    progressReports=await getProgressReports();
+    renderStudentProgressReports();
+    showToast('Comments saved! ✓',true);
+  }catch(err){showToast('Error: '+err.message);}
+}
+
+function showView(v){
+  ['List','Form','Report','Principal'].forEach(id=>document.getElementById('view'+id).classList.toggle('active',id.toLowerCase()===v));
+  if(currentRole==='student'){
+    document.getElementById('tabEntries').classList.toggle('active',v==='list');
+    document.getElementById('tabNew').classList.toggle('active',v==='form');
+    const mE=document.getElementById('mTabEntries');
+    if(mE){mE.classList.toggle('active',v==='list');document.getElementById('mTabNew').classList.toggle('active',v==='form');}
+  }
+  window.scrollTo(0,0);
+}
+
+function getPeriodLabel(dateStr){
+  try{
+    const[y,m]=dateStr.split('-').map(Number);
+    return m<=6?`January – June ${y}`:`July – December ${y}`;
+  }catch{return null;}
+}
+
+function getUniquePeriods(){
+  const seen=[],out=[];
+  entries.forEach(e=>{
+    const l=getPeriodLabel(e.date);
+    if(l&&!seen.includes(l)){seen.push(l);out.push(l);}
+  });
+  return out;
+}
+
+function renderList(){
+  const grandTotal=entries.reduce((s,e)=>s+(parseFloat(e.total_hours)||0),0);
+  const byType={};
+  entries.forEach(e=>{const k=(e.job_type||'').replace('Cadastral Survey ','').replace(/[()]/g,'').trim();byType[k]=(byType[k]||0)+(parseFloat(e.total_hours)||0);});
+  let s=`<div class="stat-card"><div class="stat-val">${entries.length}</div><div class="stat-lbl">Total Entries</div></div>
+    <div class="stat-card"><div class="stat-val">${fmt(grandTotal)}</div><div class="stat-lbl">Total Hours</div></div>`;
+  Object.entries(byType).forEach(([k,v])=>s+=`<div class="stat-card"><div class="stat-val">${fmt(v)}</div><div class="stat-lbl">${k}</div></div>`);
+  document.getElementById('statsGrid').innerHTML=s;
+  document.getElementById('btnReport').disabled=entries.length===0;
+  const mb=document.getElementById('mBtnReport');if(mb)mb.disabled=entries.length===0;
+  getDeletedEntries().then(d=>{const btn=document.getElementById('showDeletedBtn');if(btn)btn.style.display=d.length>0?'block':'none';}).catch(()=>{});
+
+  // Hours progress bar
+  const TARGET=3000;
+  const pct=Math.min(100,(grandTotal/TARGET)*100);
+  const wrap=document.getElementById('hoursProgressWrap');
+  if(wrap){
+    wrap.style.display='block';
+    const fill=document.getElementById('hoursProgressFill');
+    fill.style.width=pct+'%';
+    fill.className='progress-bar-fill'+(pct>=100?' done':pct>=75?' warn':'');
+    document.getElementById('hoursProgressLabel').textContent=`${fmt(grandTotal)} / ${TARGET} hrs (${Math.round(pct)}%)`;
+    document.getElementById('hoursProgressTarget').textContent=`${TARGET} hrs`;
+  }
+
+  if(!entries.length){document.getElementById('entryList').innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><p>No entries yet.<br>Tap <strong style="color:var(--blue)">+ New Entry</strong> to begin.</p></div>`;return;}
+
+  // Entry numbering by date
+  const sortedByDate=[...entries].sort((a,b)=>a.date>b.date?1:-1);
+  const entryNumMap={};
+  sortedByDate.forEach((e,i)=>entryNumMap[e.id]=i+1);
+
+  // Search filter
+  const search=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const sort=document.getElementById('sortSelect')?.value||'date-asc';
+  let filtered=[...entries];
+  if(search){
+    filtered=filtered.filter(e=>
+      (e.property_desc||'').toLowerCase().includes(search)||
+      (e.parish||'').toLowerCase().includes(search)||
+      (e.job_type||'').toLowerCase().includes(search)||
+      (e.title_ref||'').toLowerCase().includes(search)||
+      (e.student_notes||'').toLowerCase().includes(search)
+    );
+  }
+  filtered.sort((a,b)=>{
+    if(sort==='date-asc')return a.date>b.date?1:-1;
+    if(sort==='date-desc')return a.date<b.date?1:-1;
+    if(sort==='type')return(a.job_type||'')>(b.job_type||'')?1:-1;
+    if(sort==='parish')return(a.parish||'')>(b.parish||'')?1:-1;
+    return 0;
+  });
+
+  if(!filtered.length){document.getElementById('entryList').innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><p>No entries match your search.</p></div>`;return;}
+
+  document.getElementById('entryList').innerHTML=filtered.map(e=>{
+    const entryNum=entryNumMap[e.id]||'?';
+    const hasComment=e.principal_comments&&e.principal_comments.trim();
+    const pill=hasComment?`<span class="comment-pill comment-done">✓ Principal commented</span>`:`<span class="comment-pill comment-pending">⏳ Awaiting comment</span>`;
+    return `<div class="entry-card">
+      <div class="entry-head">
+        <div style="flex:1;min-width:0">
+          <span style="font-size:10px;font-weight:700;color:var(--muted);margin-right:6px">No. ${entryNum}</span><span class="entry-type">${e.job_type||''}</span><span class="entry-date">${fmtDate(e.date)}</span>
+          <div class="entry-prop">${e.property_desc||'—'}</div>
+          <div class="entry-meta">${e.parish||''} · ${e.title_ref||'—'} · ${e.total_hours||0} hrs · <span class="entry-degree">${e.degree||''}</span></div>
+          ${(e.deposited_plan&&e.deposited_plan.includes('[included]'))||(e.strata_plan&&e.strata_plan.includes('[included]'))?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${[e.deposited_plan&&e.deposited_plan.includes('[included]')?e.deposited_plan.replace(' [included]',''):'',e.strata_plan&&e.strata_plan.includes('[included]')?e.strata_plan.replace(' [included]',''):''].filter(Boolean).join(' · ')}</div>`:''}
+          <div style="margin-top:6px">${pill}</div>
+        </div>
+        <div class="entry-actions">
+          <button class="btn-sm" onclick="editEntry('${e.id}')">Edit</button>
+          <button class="btn-danger" onclick="deleteEntry('${e.id}')">✕</button>
+        </div>
+      </div>
+      ${e.student_notes?`<div class="entry-notes">${e.student_notes.substring(0,140)}${e.student_notes.length>140?'…':''}</div>`:''}
+      ${e.attachments&&e.attachments.length?`<div style="padding:8px 16px;background:var(--bg3);display:flex;flex-wrap:wrap;gap:6px">
+        ${e.attachments.map(a=>isImage(a)?
+          `<a href="${getAttachmentUrl(a)}" target="_blank"><img src="${getAttachmentUrl(a)}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"></a>`:
+          `<a href="${getAttachmentUrl(a)}" target="_blank" style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--blue);background:var(--bg2);padding:4px 8px;border-radius:6px;border:1px solid var(--border);text-decoration:none">📄 ${a.split('/').pop()}</a>`
+        ).join('')}
+      </div>`:''}
+      ${e.principal_comments?`<div style="padding:10px 16px;background:var(--green-bg);border-top:1px solid var(--green-border)">
+        <div style="font-size:10px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase">Supervisor's Comment · ${e.degree||''}</div>
+        <div style="font-size:12px;color:#166534;line-height:1.6">${e.principal_comments}</div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function newEntry(){
+  editingId=null;selectedNature=[];hourRows=[{type:HOUR_TYPES[0],hours:''}];
+  titleRows=[{vol:'',fol:''}];
+  document.getElementById('formTitle').textContent='New Logbook Entry';
+  ['fPropDesc','fNotes','fParcelSize','fDepositedPlan','fStrataPlan'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fDepositedPlanInclude').checked=false;
+  document.getElementById('fStrataPlanInclude').checked=false;
+  currentAttachments=[];renderAttachmentGrid();
+  document.getElementById('fDate').value='';document.getElementById('fJobType').selectedIndex=0;
+  document.getElementById('fParish').selectedIndex=0;
+  renderTitleRows();onJobTypeChange();renderHourRows();showView('form');
+}
+
+function editEntry(id){
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  editingId=id;selectedNature=Array.isArray(e.selected_nature)?[...e.selected_nature]:[];
+  hourRows=Array.isArray(e.hour_rows)?e.hour_rows.map(r=>({...r})):[{type:HOUR_TYPES[0],hours:''}];
+  document.getElementById('formTitle').textContent='Edit Entry';
+  document.getElementById('fJobType').value=e.job_type||'';document.getElementById('fDate').value=e.date||'';
+  document.getElementById('fParish').value=e.parish||'';
+  // Parse title_ref into rows
+  titleRows=parseTitleRef(e.title_ref||'');
+  renderTitleRows();
+  // Deposited Plan and Strata Plan
+  const dp=e.deposited_plan||''; const sp=e.strata_plan||'';
+  document.getElementById('fDepositedPlan').value=dp.replace('[included]','').replace('D.P. No.','').trim();
+  document.getElementById('fDepositedPlanInclude').checked=dp.includes('[included]');
+  document.getElementById('fStrataPlan').value=sp.replace('[included]','').replace('S.P. No.','').trim();
+  document.getElementById('fStrataPlanInclude').checked=sp.includes('[included]');
+  document.getElementById('fPropDesc').value=e.property_desc||'';document.getElementById('fNotes').value=e.student_notes||'';
+  document.getElementById('fParcelSize').value=e.parcel_size||'';currentAttachments=Array.isArray(e.attachments)?[...e.attachments]:[];renderAttachmentGrid();
+  onJobTypeChange();renderHourRows();showView('form');
+}
+
+async function deleteEntry(id){
+  if(!confirm('Move this entry to Recently Deleted?'))return;
+  try{
+    await updateEntry(id,{deleted_at:new Date().toISOString()});
+    entries=entries.filter(e=>e.id!==id);
+    renderList();
+    showToast('Entry moved to Recently Deleted');
+    // Show the restore button
+    document.getElementById('showDeletedBtn').style.display='block';
+  }catch(err){showToast('Error: '+err.message);}
+}
+
+async function toggleDeleted(){
+  const section=document.getElementById('deletedSection');
+  const btn=document.getElementById('showDeletedBtn');
+  if(section.style.display==='none'){
+    section.style.display='block';
+    btn.style.display='none';
+    await loadDeletedEntries();
+  } else {
+    section.style.display='none';
+    btn.style.display='block';
+  }
+}
+
+async function loadDeletedEntries(){
+  const deleted=await getDeletedEntries();
+  if(!deleted.length){
+    document.getElementById('deletedList').innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:16px">No recently deleted entries.</p>';
+    return;
+  }
+  document.getElementById('deletedList').innerHTML=deleted.map(e=>`
+    <div style="background:var(--bg2);border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div>
+        <div style="font-size:11px;color:#dc2626;text-transform:uppercase;letter-spacing:1px;font-weight:600">${e.job_type||''}</div>
+        <div style="font-size:13px;font-weight:600;margin-top:2px">${e.property_desc||'—'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${e.parish||''} · ${fmtDate(e.date)}</div>
+      </div>
+      <button class="btn-ghost" style="font-size:12px;color:var(--green);border-color:var(--green-border);flex-shrink:0" onclick="restoreEntry('${e.id}')">Restore</button>
+    </div>`).join('');
+}
+
+async function restoreEntry(id){
+  try{
+    await updateEntry(id,{deleted_at:null});
+    entries=await getEntries();
+    renderList();
+    await loadDeletedEntries();
+    showToast('Entry restored! ✓',true);
+  }catch(err){showToast('Error: '+err.message);}
+}
+
+function onJobTypeChange(){
+  const jt=document.getElementById('fJobType').value;
+  const opts=NATURE_OPTIONS[jt]||[];
+  window._natureOpts=opts;
+  const container=document.getElementById('natureOptions');
+  container.innerHTML='';
+  opts.forEach((item,idx)=>{
+    const checked=selectedNature.includes(item);
+    const label=document.createElement('label');
+    label.className='nature-item'+(checked?' checked':'');
+    label.dataset.idx=idx;
+    const cb=document.createElement('input');
+    cb.type='checkbox';cb.checked=checked;
+    cb.style.marginTop='2px';cb.style.accentColor='var(--blue)';cb.style.flexShrink='0';
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(' '+item));
+    cb.addEventListener('change',function(e){
+      e.stopPropagation();
+      if(cb.checked){
+        selectedNature.push(item);
+        label.classList.add('checked');
+      } else {
+        selectedNature=selectedNature.filter(x=>x!==item);
+        label.classList.remove('checked');
+      }
+    });
+    label.addEventListener('click',function(e){
+      if(e.target===cb)return; // let checkbox handle its own click
+      cb.checked=!cb.checked;
+      cb.dispatchEvent(new Event('change'));
+    });
+    container.appendChild(label);
+  });
+}
+
+function toggleNature(){}// kept for compatibility
+
+function renderHourRows(){
+  document.getElementById('hourRows').innerHTML=hourRows.map((r,i)=>`
+    <div class="hour-row">
+      <select onchange="updateHourRow(${i},'type',this.value)">${HOUR_TYPES.map(ht=>`<option ${ht===r.type?'selected':''}>${ht}</option>`).join('')}</select>
+      <input type="number" min="0" step="0.5" placeholder="Hours" value="${r.hours}" oninput="updateHourRow(${i},'hours',this.value)">
+      ${hourRows.length>1?`<button class="btn-danger" onclick="removeHourRow(${i})" style="flex-shrink:0">✕</button>`:''}
+    </div>`).join('');
+  calcTotal();
+}
+
+function updateHourRow(i,key,val){hourRows[i][key]=val;calcTotal();}
+function addHourRow(){hourRows.push({type:HOUR_TYPES[0],hours:''});renderHourRows();}
+function removeHourRow(i){hourRows.splice(i,1);renderHourRows();}
+function calcTotal(){const t=hourRows.reduce((s,r)=>s+(parseFloat(r.hours)||0),0);document.getElementById('totalHoursDisplay').textContent=fmt(t);return t;}
+
+async function saveEntry(){
+  const btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='Saving…';
+  const total=calcTotal();
+  const dpRaw=document.getElementById('fDepositedPlan').value.trim().replace(/^D\.P\.\s*No\.?\s*/i,'');
+  const dpVal=dpRaw?'D.P. No. '+dpRaw:'';
+  const dpInc=document.getElementById('fDepositedPlanInclude').checked;
+  const spRaw=document.getElementById('fStrataPlan').value.trim().replace(/^S\.P\.\s*No\.?\s*/i,'');
+  const spVal=spRaw?'S.P. No. '+spRaw:'';
+  const spInc=document.getElementById('fStrataPlanInclude').checked;
+  const entry={pair_id:currentPair.id,job_type:document.getElementById('fJobType').value,date:document.getElementById('fDate').value,parish:document.getElementById('fParish').value,title_ref:buildTitleRef(),deposited_plan:dpVal?(dpInc?dpVal+' [included]':dpVal):'',strata_plan:spVal?(spInc?spVal+' [included]':spVal):'',property_desc:document.getElementById('fPropDesc').value,selected_nature:selectedNature,student_notes:document.getElementById('fNotes').value,hour_rows:hourRows,total_hours:total.toString(),parcel_size:document.getElementById('fParcelSize').value,student_name:studentName,attachments:currentAttachments};
+  try{
+    if(editingId){await updateEntry(editingId,entry);const idx=entries.findIndex(e=>e.id===editingId);if(idx!==-1)entries[idx]={...entries[idx],...entry};showToast('Entry updated!');}
+    else{const result=await insertEntry(entry);entries.push(Array.isArray(result)&&result[0]?result[0]:entry);showToast('Entry saved!');}
+    renderList();showView('list');editingId=null;
+  }catch(err){showToast('Error: '+err.message);}
+  btn.disabled=false;btn.textContent='Save Entry';
+}
+
+// ── PRINCIPAL VIEW ──
+async function loadPrincipalView(){
+  document.getElementById('principalList').innerHTML=`<div class="loading-state"><span class="spinner"></span> Loading…</div>`;
+  document.getElementById('progressReportsList').innerHTML=`<div class="loading-state"><span class="spinner"></span> Loading…</div>`;
+  try{
+    [entries,progressReports]=await Promise.all([getEntries(),getProgressReports()]); // getEntries already filters deleted_at=null
+    renderProgressReports();renderPrincipalList();
+  }catch(e){
+    document.getElementById('principalList').innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><p>Could not load.<br><small>${e.message}</small></p></div>`;
+  }
+}
+
+function getProgressPeriods(){
+  if(!entries.length)return[];
+  const seen=[],out=[];
+  entries.forEach(e=>{const l=getPeriodLabel(e.date);if(l&&!seen.includes(l)){seen.push(l);out.push({label:l});}});
+  return out;
+}
+
+function renderProgressReports(){
+  const periods=getProgressPeriods();
+  if(!periods.length){document.getElementById('progressReportsList').innerHTML=`<p style="color:var(--muted);font-size:13px">Progress reports will appear here once entries are added.</p>`;return;}
+  document.getElementById('progressReportsList').innerHTML=periods.map(p=>{
+    const existing=progressReports.find(r=>r.period_label===p.label)||{};
+    const isDone=existing.principal_observations&&existing.principal_observations.trim();
+    return `<div class="progress-card ${isDone?'progress-done':''}">
+      <div class="progress-card-head">
+        <h3>Progress Report: ${p.label}</h3>
+        ${isDone?`<span style="font-size:12px;background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:20px">✓ Complete</span>`:`<span style="font-size:12px;background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:20px">⏳ Pending</span>`}
+      </div>
+      <div class="progress-card-body">
+        <div class="field"><label>Observations on training, experience gained and ability of Trainee</label>
+          <textarea id="pr_obs_${p.label.replace(/\s/g,'_')}" style="min-height:110px" placeholder="Observations on training to date…">${existing.principal_observations||''}</textarea>
+        </div>
+        <div class="field"><label>Principal's Signature Date</label>
+          <input type="date" id="pr_psig_${p.label.replace(/\s/g,'_')}" value="${existing.principal_signature_date||''}">
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+        <div style="margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase">Candidate's Comments</div>
+          ${existing.candidate_comments?
+            `<div style="font-size:13px;color:var(--text);line-height:1.7;background:var(--blue-soft);padding:12px;border-radius:8px;border:1px solid var(--border)">${existing.candidate_comments}</div>
+            ${existing.candidate_signature_date?`<div style="font-size:11px;color:var(--muted);margin-top:4px">Signed: ${existing.candidate_signature_date}</div>`:''}`:
+            `<div style="font-size:13px;color:var(--muted);font-style:italic;padding:10px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">Candidate has not yet added comments for this period.</div>`
+          }
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn-green" onclick="saveProgressReport_('${p.label}','${existing.id||''}')">Save Progress Report</button>
+        </div>
+        ${isDone?`<div class="saved-comment" style="margin-top:12px">Saved: "${existing.principal_observations.substring(0,100)}${existing.principal_observations.length>100?'…':''}"</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveProgressReport_(label,existingId){
+  const key=label.replace(/\s/g,'_');
+  const obs=document.getElementById(`pr_obs_${key}`).value.trim();
+  const psig=document.getElementById(`pr_psig_${key}`).value;
+  if(!obs){showToast('Please enter your observations first');return;}
+  const data={pair_id:currentPair.id,period_label:label,principal_observations:obs,principal_signature_date:psig};
+  if(existingId)data.id=existingId;
+  try{
+    await saveProgressReportDB(data);
+    progressReports=await getProgressReports();
+    renderProgressReports();showToast('Progress report saved! ✓',true);
+  }catch(err){showToast('Error: '+err.message);}
+}
+
+function renderPrincipalList(){
+  if(!entries.length){document.getElementById('principalList').innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><p>No entries yet.</p></div>`;return;}
+  const pending=entries.filter(e=>!e.principal_comments||!e.principal_comments.trim()).length;
+  const banner=pending>0
+    ?`<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#854d0e;">⏳ <strong>${pending} ${pending===1?'entry':'entries'}</strong> still need${pending===1?'s':''} your comments.</div>`
+    :`<div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#166534;">✅ All entries have been commented on!</div>`;
+  document.getElementById('principalList').innerHTML=banner+entries.map(e=>{
+    const hasComment=e.principal_comments&&e.principal_comments.trim();
+    const nature=Array.isArray(e.selected_nature)?e.selected_nature:[];
+    const hours=Array.isArray(e.hour_rows)?e.hour_rows:[];
+    const attachments=Array.isArray(e.attachments)?e.attachments:[];
+    return `<div class="principal-entry">
+      <div class="principal-entry-head">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+          <div>
+            <span style="font-size:10px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;font-weight:600">${e.job_type||''}</span>
+            <div style="font-size:16px;font-weight:700;margin-top:4px;font-family:'Playfair Display',serif">${e.property_desc||'—'}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${e.parish||''} · ${fmtDate(e.date)} · ${e.total_hours||0} hrs</div>
+          </div>
+          ${hasComment?`<span class="comment-pill comment-done">✓ Commented</span>`:`<span class="comment-pill comment-pending">⏳ Needs comment</span>`}
+        </div>
+      </div>
+      <div class="principal-entry-body">
+        <div style="display:flex;gap:8px;margin-bottom:8px;font-size:13px"><span class="detail-label">Title Reference</span><span>${e.title_ref||'—'}</span></div>
+        ${nature.length?`<div style="margin-bottom:10px"><div class="detail-label" style="margin-bottom:4px">Nature of Work</div><ul class="nature-list">${nature.map(n=>`<li>${n}</li>`).join('')}</ul></div>`:''}
+        ${e.student_notes?`<div style="margin-bottom:10px"><div class="detail-label" style="margin-bottom:4px">Student's Notes</div><div style="font-size:13px;line-height:1.6">${e.student_notes}</div></div>`:''}
+        <div><div class="detail-label" style="margin-bottom:4px">Work Hours</div>${hours.filter(r=>r.hours).map(r=>`<div style="font-size:12px">${r.type}: <strong>${r.hours} hrs</strong></div>`).join('')}<div style="font-size:13px;font-weight:600;color:var(--blue);margin-top:4px">Total: ${e.total_hours||0} hrs</div></div>
+        ${attachments.length?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div class="detail-label" style="margin-bottom:8px">Attachments (${attachments.length})</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${attachments.map(a=>isImage(a)?
+              `<a href="${getAttachmentUrl(a)}" target="_blank" title="${a.split('/').pop()}">
+                <img src="${getAttachmentUrl(a)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+               </a>`:
+              `<a href="${getAttachmentUrl(a)}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--blue);text-decoration:none;font-weight:500">
+                📄 ${a.split('/').pop()}
+               </a>`
+            ).join('')}
+          </div>
+        </div>`:''}
+        <div class="comment-area">
+          <div style="margin-bottom:14px">
+            <label>Student Surveyor Degree</label>
+            <select id="degree_${e.id}" style="max-width:280px">
+              <option ${e.degree==='Meets Expectations'?'selected':''}>Meets Expectations</option>
+              <option ${e.degree==='Exceeds Expectations'?'selected':''}>Exceeds Expectations</option>
+              <option ${e.degree==='Superior'?'selected':''}>Superior</option>
+            </select>
+          </div>
+          <label>Principal's Comments</label>
+          <textarea id="comment_${e.id}" placeholder="Enter your assessment and comments…" style="min-height:80px">${e.principal_comments||''}</textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn-green" onclick="saveComment('${e.id}')">Save Comment</button></div>
+          ${hasComment?`<div class="saved-comment">Last saved: "${e.principal_comments}"</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveComment(id){
+  const comment=document.getElementById('comment_'+id).value.trim();
+  if(!comment){showToast('Please enter a comment first');return;}
+  const degree=document.getElementById('degree_'+id).value;
+  try{
+    await updateEntry(id,{principal_comments:comment,degree:degree});
+    const idx=entries.findIndex(e=>e.id===id);
+    if(idx!==-1){entries[idx].principal_comments=comment;entries[idx].degree=degree;}
+    showToast('Comment saved! ✓',true);renderPrincipalList();
+  }catch(err){showToast('Error: '+err.message);}
+}
+
+// ── REPORT ──
+function generateReport(){
+  // Populate period filter dropdown
+  const sel=document.getElementById('periodFilter');
+  const current=sel.value;
+  sel.innerHTML='<option value="">All Periods (Full Logbook)</option>';
+  getUniquePeriods().forEach(p=>{
+    const opt=document.createElement('option');opt.value=p;opt.textContent=p;sel.appendChild(opt);
+  });
+  sel.value=current;
+  updateReportPreview();
+  showView('report');
+}
+
+function getFilteredEntries(){
+  const filter=document.getElementById('periodFilter').value;
+  if(!filter)return entries;
+  return entries.filter(e=>getPeriodLabel(e.date)===filter);
+}
+
+function updateReportPreview(){
+  const filtered=getFilteredEntries();
+  const grandTotal=filtered.reduce((s,e)=>s+(parseFloat(e.total_hours)||0),0);
+  const byType={};filtered.forEach(e=>{byType[e.job_type]=(byType[e.job_type]||0)+(parseFloat(e.total_hours)||0);});
+  const lines=[];
+  lines.push("STUDENT SURVEYOR'S DIARY AND LOG BOOK");lines.push('='.repeat(62));
+  lines.push(`Student Surveyor:   ${studentName}, BSc.(Hons.)`);
+  lines.push(`Principal:          ${(pairSettings&&pairSettings.principal_name)||'Supervising Surveyor'}`);
+  lines.push(`Principal's Office: ${(pairSettings&&pairSettings.organization_name)||''}`);
+  lines.push(`Total Entries:      ${filtered.length}`);lines.push(`Total Hours:        ${grandTotal}`);lines.push('');
+  lines.push('TALLY OF HOURS');lines.push('-'.repeat(50));
+  Object.entries(byType).forEach(([k,v])=>lines.push(`${k.padEnd(48)} ${v} hrs`));
+  lines.push(`${'TOTAL'.padEnd(48)} ${grandTotal} hrs`);
+  lines.push('');lines.push('='.repeat(62));lines.push('');
+  filtered.forEach((e,i)=>{
+    const nature=Array.isArray(e.selected_nature)?e.selected_nature:[];
+    const hours=Array.isArray(e.hour_rows)?e.hour_rows:[];
+    lines.push(`ENTRY ${i+1} of ${filtered.length}`);lines.push('-'.repeat(52));
+    lines.push(`Job Type:              ${e.job_type||''}`);lines.push(`Date:                  ${fmtDate(e.date)}`);
+    lines.push(`Title Reference:       ${e.title_ref||'—'}`);lines.push(`Parish:                ${e.parish||''}`);
+    lines.push(`Property Description:  ${e.property_desc||'—'}`);
+    if(e.parcel_size)lines.push(`Parcel Size:           ${e.parcel_size}`);
+    lines.push('');lines.push('Nature of Professional Work:');
+    nature.forEach(n=>lines.push(`  - ${n}`));if(!nature.length)lines.push('  —');
+    lines.push('');lines.push("Student Surveyor's Notes:");lines.push(e.student_notes||'  —');lines.push('');
+    lines.push('Work Hours:');hours.forEach(r=>{if(r.hours)lines.push(`  ${r.type}: ${r.hours} Hours`);});
+    lines.push(`  Total Hours: ${e.total_hours||0}`);lines.push('');
+    lines.push(`Student Surveyor Degree: ${e.degree||''}`);lines.push('');
+    lines.push("Principal's Comments:");lines.push(e.principal_comments||'  [Pending]');
+    lines.push('');lines.push('');
+  });
+  document.getElementById('reportContent').textContent=lines.join('\n');
+}
+
+function downloadReport(){
+  const text=document.getElementById('reportContent').textContent;
+  const blob=new Blob([text],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const filter=document.getElementById('periodFilter').value;
+  a.href=url;a.download=`Logbook_${studentName.replace(/\s+/g,'_')}${filter?'_'+filter.replace(/\s/g,'_'):''}.txt`;
+  a.click();URL.revokeObjectURL(url);
+}
+
+async function downloadPDF(){
+  const btn=document.getElementById('btnDownloadPDF');
+  const box=document.getElementById('pdfGenerating');
+  btn.disabled=true;btn.textContent='Generating…';box.style.display='block';
+
+  const filtered=getFilteredEntries();
+  const filter=document.getElementById('periodFilter').value;
+  const dates=filtered.map(e=>e.date).filter(Boolean).sort();
+  const start=dates[0]?fmtDate(dates[0]):'2025';
+  const end=dates[dates.length-1]?fmtDate(dates[dates.length-1]):'2026';
+
+  try{
+    const response=await fetch(`${API_URL}/generate-pdf`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        student_name:studentName,
+        principal_name:(pairSettings&&pairSettings.principal_name)||'Supervising Surveyor',
+        office:(pairSettings&&pairSettings.organization_name)||'',
+        period:filter||`${start} – ${end}`,
+        entries:filtered,
+        progress_reports:progressReports,
+        filter_period:filter||null,
+      })
+    });
+    if(!response.ok)throw new Error('Server error: '+response.status);
+    const blob=await response.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`Logbook_${studentName.replace(/\s+/g,'_')}${filter?'_'+filter.replace(/[^a-zA-Z0-9]/g,'_'):''}.pdf`;
+    a.click();URL.revokeObjectURL(url);
+    showToast('PDF downloaded! ✓',true);
+  }catch(err){showToast('PDF error: '+err.message);}
+  btn.disabled=false;btn.textContent='⬇ Download PDF';box.style.display='none';
+}
+
+// ── ATTACHMENTS ──
+let currentAttachments = [];
+const STORAGE_BUCKET = 'logbook-attachments';
+
+function getAttachmentUrl(path){
+  return `${SUPABASE_URL}/storage/v1/object/public/${path}`;
+}
+
+function isImage(path){
+  return /\.(jpg|jpeg|png|gif|webp)$/i.test(path);
+}
+
+function renderAttachmentGrid(){
+  const grid = document.getElementById('attachmentGrid');
+  if(!grid) return;
+  if(!currentAttachments.length){
+    grid.innerHTML='';
+    return;
+  }
+  grid.innerHTML = currentAttachments.map((path,i) => {
+    const name = path.split('/').pop();
+    const url = getAttachmentUrl(path);
+    return isImage(path)
+      ? `<div class="attachment-item" title="${name}">
+           <img src="${url}" onclick="window.open('${url}','_blank')">
+           <div style="position:absolute;top:3px;right:3px">
+             <button onclick="removeAttachment(${i})" style="background:rgba(220,38,38,0.85);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:18px;padding:0">✕</button>
+           </div>
+         </div>`
+      : `<div class="attachment-item" title="${name}" onclick="window.open('${url}','_blank')">
+           <div class="att-icon">📄<div class="att-name">${name}</div></div>
+           <div style="position:absolute;top:3px;right:3px">
+             <button onclick="event.stopPropagation();removeAttachment(${i})" style="background:rgba(220,38,38,0.85);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:18px;padding:0">✕</button>
+           </div>
+         </div>`;
+  }).join('');
+}
+
+function removeAttachment(i){
+  currentAttachments.splice(i,1);
+  renderAttachmentGrid();
+}
+
+async function handleFileUpload(event){
+  const files = Array.from(event.target.files);
+  if(!files.length) return;
+  const prog = document.getElementById('uploadProgress');
+  prog.textContent = 'Uploading…';
+  for(const file of files){
+    try{
+      const ext = file.name.split('.').pop();
+      const filename = `${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
+      const path = `${STORAGE_BUCKET}/${filename}`;
+      const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${filename}`;
+      const res = await fetch(uploadUrl,{
+        method:'POST',
+        headers:{
+          'apikey':SUPABASE_KEY,
+          'Authorization':`Bearer ${SUPABASE_KEY}`,
+          'Content-Type':file.type,
+          'x-upsert':'true',
+        },
+        body: file,
+      });
+      if(!res.ok) throw new Error(await res.text());
+      currentAttachments.push(path);
+      renderAttachmentGrid();
+      prog.textContent = `✓ ${file.name} uploaded`;
+    } catch(err){
+      prog.textContent = `Error uploading ${file.name}: ${err.message}`;
+    }
+  }
+  event.target.value='';
+  setTimeout(()=>prog.textContent='', 3000);
+}
+
+// ── TITLE REF ROWS ──
+let titleRows=[{vol:'',fol:''}];
+
+function renderTitleRows(){
+  const container=document.getElementById('titleRefRows');
+  if(!container)return;
+  container.innerHTML=titleRows.map((r,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <span style="font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap">Vol.</span>
+      <input type="text" placeholder="e.g. 1211 or 1211, 1212 or 1211-1213" value="${r.vol||''}" oninput="titleRows[${i}].vol=this.value" style="flex:2;min-width:100px">
+      <span style="font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap">Fol.</span>
+      <input type="text" placeholder="e.g. 27 or 27, 29 or 23-24" value="${r.fol||''}" oninput="titleRows[${i}].fol=this.value" style="flex:2;min-width:100px">
+      ${titleRows.length>1?`<button type="button" class="btn-danger" onclick="removeTitleRow(${i})" style="flex-shrink:0">✕</button>`:''}
+    </div>`).join('');
+}
+
+function addTitleRow(){titleRows.push({vol:'',fol:''});renderTitleRows();}
+function removeTitleRow(i){titleRows.splice(i,1);renderTitleRows();}
+
+function buildTitleRef(){
+  function volLabel(v){return(v.includes(',')||v.includes('-')||v.includes('&'))?'Vols.':'Vol.';}
+  function folLabel(f){return(f.includes(',')||f.includes('-')||f.includes('&'))?'Fols.':'Fol.';}
+  return titleRows.filter(r=>r.vol||r.fol).map(r=>{
+    const v=r.vol.trim(); const f=r.fol.trim();
+    if(v&&f)return`${volLabel(v)} ${v} ${folLabel(f)} ${f}`;
+    if(v)return`${volLabel(v)} ${v}`;
+    return`${folLabel(f)} ${f}`;
+  }).join(', ');
+}
+
+function parseTitleRef(tr){
+  if(!tr)return[{vol:'',fol:''}];
+  // Split by | for multiple titles
+  const parts=tr.split('|').map(s=>s.trim()).filter(Boolean);
+  if(!parts.length)return[{vol:'',fol:''}];
+  return parts.map(part=>{
+    const vMatch=part.match(/Vol[s]?\.?\s*([^\s,F]+(?:\s+[^\s,F]+)*?)(?:\s+Fol|$)/i);
+    const fMatch=part.match(/Fol[s]?\.?\s*(.+)/i);
+    return{vol:vMatch?vMatch[1].trim():'',fol:fMatch?fMatch[1].trim():''};
+  });
+}
+
+// ── SETTINGS ──
+let settingsDraft={hourTypes:[],nature:{}};
+
+function openSettings(){
+  settingsDraft.hourTypes=[...HOUR_TYPES];
+  settingsDraft.nature=JSON.parse(JSON.stringify(NATURE_OPTIONS));
+  switchSettingsTab(1);
+  document.getElementById('settingsModal').style.display='flex';
+}
+
+function closeSettings(){
+  document.getElementById('settingsModal').style.display='none';
+}
+
+function switchSettingsTab(n){
+  [1,2,3].forEach(i=>{
+    const tab=document.getElementById('settingsTab'+i);
+    const btn=document.getElementById('stab'+i);
+    if(tab)tab.style.display=i===n?'block':'none';
+    if(btn)btn.classList.toggle('active',i===n);
+  });
+  if(n===1)renderJobTypeSettings();
+  if(n===2){renderSettingsJobTypeDropdown();renderNatureSettings();}
+  if(n===3)renderHourTypeSettings();
+}
+
+function getJobTypes(){return Object.keys(settingsDraft.nature);}
+
+function renderJobTypeSettings(){
+  document.getElementById('settingsJobTypesList').innerHTML=getJobTypes().map((jt,i)=>
+    '<div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">'+
+    '<div style="display:flex;flex-direction:column;gap:2px">'+
+    '<button class="btn-sm" style="padding:2px 7px;font-size:11px" onclick="moveJobType('+i+',-1)" '+(i===0?'disabled':'')+'>▲</button>'+
+    '<button class="btn-sm" style="padding:2px 7px;font-size:11px" onclick="moveJobType('+i+',1)" '+(i===getJobTypes().length-1?'disabled':'')+'>▼</button>'+
+    '</div>'+
+    '<input type="text" value="'+jt+'" oninput="renameJobType('+i+',this.value)" style="flex:1">'+
+    '<button class="btn-danger" onclick="removeJobType('+i+')">✕</button>'+
+    '</div>').join('');
+}
+
+function moveJobType(i,dir){
+  const ents=Object.entries(settingsDraft.nature);
+  const j=i+dir;
+  if(j<0||j>=ents.length)return;
+  [ents[i],ents[j]]=[ents[j],ents[i]];
+  settingsDraft.nature=Object.fromEntries(ents);
+  renderJobTypeSettings();
+}
+
+function renderHourTypeSettings(){
+  document.getElementById('settingsHourTypes').innerHTML=settingsDraft.hourTypes.map((ht,i)=>
+    '<div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">'+
+    '<div style="display:flex;flex-direction:column;gap:2px">'+
+    '<button class="btn-sm" style="padding:2px 7px;font-size:11px" onclick="moveHourType('+i+',-1)" '+(i===0?'disabled':'')+'>▲</button>'+
+    '<button class="btn-sm" style="padding:2px 7px;font-size:11px" onclick="moveHourType('+i+',1)" '+(i===settingsDraft.hourTypes.length-1?'disabled':'')+'>▼</button>'+
+    '</div>'+
+    '<input type="text" value="'+ht+'" oninput="settingsDraft.hourTypes['+i+']=this.value" style="flex:1">'+
+    '<button class="btn-danger" onclick="settingsDraft.hourTypes.splice('+i+',1);renderHourTypeSettings()">✕</button>'+
+    '</div>').join('');
+}
+
+function moveHourType(i,dir){
+  const j=i+dir;
+  if(j<0||j>=settingsDraft.hourTypes.length)return;
+  [settingsDraft.hourTypes[i],settingsDraft.hourTypes[j]]=[settingsDraft.hourTypes[j],settingsDraft.hourTypes[i]];
+  renderHourTypeSettings();
+}
+
+function renderSettingsJobTypeDropdown(){
+  const sel=document.getElementById('settingsJobType');if(!sel)return;
+  const cur=sel.value;
+  const jts=Object.keys(settingsDraft.nature);
+  sel.innerHTML=jts.map(jt=>'<option'+(jt===cur?' selected':'')+'>'+jt+'</option>').join('');
+  if(!cur||!jts.includes(cur))sel.value=jts[0]||'';
+}
+
+function renderNatureSettings(){
+  const jt=document.getElementById('settingsJobType').value;
+  const items=settingsDraft.nature[jt]||[];
+  document.getElementById('settingsNatureList').innerHTML=items.map((item,i)=>
+    '<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-start">'+
+    '<div style="display:flex;flex-direction:column;gap:2px;margin-top:4px">'+
+    '<button class="btn-sm" style="padding:2px 7px;font-size:11px" onclick="moveNatureItem(\''+jt+'\','+i+',-1)" '+(i===0?'disabled':'')+'>▲</button>'+
+    '<button class="btn-sm" style="padding:2px 7px;font-size:11px" onclick="moveNatureItem(\''+jt+'\','+i+',1)" '+(i===items.length-1?'disabled':'')+'>▼</button>'+
+    '</div>'+
+    '<textarea rows="2" style="flex:1;resize:vertical;font-size:12px" oninput="settingsDraft.nature[\''+jt+'\']['+i+']=this.value">'+item+'</textarea>'+
+    '<button class="btn-danger" style="margin-top:4px;flex-shrink:0" onclick="settingsDraft.nature[\''+jt+'\'].splice('+i+',1);renderNatureSettings()">✕</button>'+
+    '</div>').join('');
+}
+
+function moveNatureItem(jt,i,dir){
+  const arr=settingsDraft.nature[jt];
+  const j=i+dir;
+  if(j<0||j>=arr.length)return;
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  renderNatureSettings();
+}
+
+async function saveSettings(){
+  HOUR_TYPES=settingsDraft.hourTypes.filter(h=>h.trim());
+  NATURE_OPTIONS=JSON.parse(JSON.stringify(settingsDraft.nature));
+  Object.keys(NATURE_OPTIONS).forEach(k=>{
+    NATURE_OPTIONS[k]=NATURE_OPTIONS[k].filter(v=>v.trim());
+    if(!NATURE_OPTIONS[k].length)delete NATURE_OPTIONS[k];
+  });
+  localStorage.setItem('lb_hour_types',JSON.stringify(HOUR_TYPES));
+  localStorage.setItem('lb_nature_options',JSON.stringify(NATURE_OPTIONS));
+  // Persist to the shared pair_settings row so both student and
+  // supervisor see the same job types, not just whoever's device saved last.
+  if(currentPair){
+    try{
+      await sbFetch(`pair_settings?pair_id=eq.${currentPair.id}`,{method:'PATCH',body:JSON.stringify({job_types:NATURE_OPTIONS})});
+      if(pairSettings)pairSettings.job_types=NATURE_OPTIONS;
+    }catch(err){showToast('Saved locally, but syncing to your supervisor failed: '+err.message);}
+  }
+  const fj=document.getElementById('fJobType');
+  if(fj){const cur=fj.value;fj.innerHTML=Object.keys(NATURE_OPTIONS).map(jt=>'<option'+(jt===cur?' selected':'')+'>'+jt+'</option>').join('');}
+  closeSettings();
+  if(document.getElementById('hourRows'))renderHourRows();
+  if(document.getElementById('natureOptions'))onJobTypeChange();
+  showToast('Settings saved! ✓',true);
+}
+
+
+function toggleHamburger(){
+  const menu=document.getElementById('hamburgerMenu');
+  if(menu)menu.style.display=menu.style.display==='block'?'none':'block';
+}
+document.addEventListener('click',function(e){
+  const btn=document.getElementById('hamburgerBtn');
+  const menu=document.getElementById('hamburgerMenu');
+  if(menu&&btn&&!btn.contains(e.target)&&!menu.contains(e.target)){
+    menu.style.display='none';
+  }
+});
+
+function fmt(n){return n%1===0?n:n.toFixed(1);}
+function fmtDate(d){
+  if(!d)return'—';
+  const[y,m,day]=d.split('-');
+  return`${parseInt(day)} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]} ${y}`;
+}
+function showToast(msg,green=false){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.className=green?'show green':'show';setTimeout(()=>t.className='',2500);
+}
+</script>
+</body>
+</html>
